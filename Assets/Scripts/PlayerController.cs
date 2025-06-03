@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
 {
     private float axisH; // 左右のキーの値を格納
     Rigidbody2D rbody; // Rigidbody2Dの情報を扱うための媒体
+    Animator animator; // Animatorの情報を扱うための媒体
     public float speed = 3.0f; // 歩くスピード
     private bool isJump; // ジャンプ中がどうか
     private bool onGround; // 地面判定
@@ -20,6 +21,7 @@ public class PlayerController : MonoBehaviour
         // Playerに付いているRigidbody2Dコンポーネントを
         // 変数rbodyに格納
         rbody = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -35,10 +37,19 @@ public class PlayerController : MonoBehaviour
         {
             // this.gameObject.GetCommponent<Transform>().localState;
             transform.localScale = new Vector3(1, 1, 1);
+            // 担当しているコントローラーのパラメーターを変える
+            animator.SetBool("run", true);
         }
         else if (axisH < 0)
         {
             transform.localScale = new Vector3(-1, 1, 1);
+            // 担当しているコントローラーのパラメーターを変える
+            animator.SetBool("run", true);
+        }
+        else
+        {
+            // 担当しているコントローラーのパラメーターを変える
+            animator.SetBool("run", false);
         }
 
         // もしもジャンプボタンが押されたら
@@ -66,9 +77,35 @@ public class PlayerController : MonoBehaviour
         {
             // 上に押し出す
             rbody.AddForce(new Vector2(0, jump), ForceMode2D.Impulse);
+            // 担当しているコントローラーのパラメーターを変える
+            animator.SetTrigger("jump");
             isJump = false;
         }
     }
+
+    // 何かとぶつかったら発動するメソッド
+    // ぶつかった相手のCollider情報を引数Collisionに入れる
+    // 相手にColliderが付いてないと意味が無い
+    // 相手のColliderをisTriggerにする（相手を通り抜けられるようになる）
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+        string tag = collision.tag;
+        if (tag == "Goal") 
+        {
+            GameController.gameState = "gameclear";
+        }
+        else if (tag == "Dead")
+        {
+            GameController.gameState = "gameover";
+        }
+    }
+
+    /* 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        
+    }
+    */
 
     public void Jump()
     {
