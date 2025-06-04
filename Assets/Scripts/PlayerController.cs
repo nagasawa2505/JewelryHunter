@@ -27,6 +27,11 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (GameController.gameState != "playing")
+        {
+            return;
+        }
+
         // 引数Horizontalの場合、水平方向のキーが何か押された場合
         // 左なら-1、右なら1、その他なら0を格納
         axisH = Input.GetAxisRaw("Horizontal");
@@ -38,13 +43,13 @@ public class PlayerController : MonoBehaviour
             // this.gameObject.GetCommponent<Transform>().localState;
             transform.localScale = new Vector3(1, 1, 1);
             // 担当しているコントローラーのパラメーターを変える
-            animator.SetBool("run", true);
+            Run();
         }
         else if (axisH < 0)
         {
             transform.localScale = new Vector3(-1, 1, 1);
             // 担当しているコントローラーのパラメーターを変える
-            animator.SetBool("run", true);
+            Run();
         }
         else
         {
@@ -64,7 +69,7 @@ public class PlayerController : MonoBehaviour
         // 地面にいるかどうかを判別
         onGround = Physics2D.CircleCast(
             transform.position, // Playerの基準点
-            0.2f, // 円の半径
+            0.1f, // 円の半径
             Vector2.down, // 指定した点からどの方向にチェックを伸ばすか new Vector2(0, -1)
             0.0f, // 指定した点からどのくらいチェックの距離を伸ばすか
             groundLayer); // 指定したレイヤー
@@ -90,28 +95,59 @@ public class PlayerController : MonoBehaviour
     public void OnTriggerEnter2D(Collider2D collision)
     {
         string tag = collision.tag;
+
         if (tag == "Goal") 
         {
-            GameController.gameState = "gameclear";
+            Goal();
         }
         else if (tag == "Dead")
         {
-            GameController.gameState = "gameover";
+            GameOver();
         }
     }
 
-    /* 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        
-    }
-    */
+    // すり抜けない場合はこっち
+    // public void OnCollisionEnter2D(Collision2D collision)
 
-    public void Jump()
+    public void GameOver()
+    {
+        GameController.gameState = "gameover";
+        animator.SetBool("gameOver", true);
+        Stop();
+
+        // プレイヤーを上に跳ね上げる
+        rbody.AddForce(new Vector2(0, 5), ForceMode2D.Impulse);
+
+        // 当たり判定をカット
+        GetComponent<CapsuleCollider2D>().enabled = false;
+    }
+
+    void Run()
+    {
+        if (onGround)
+        {
+            animator.SetBool("run", true);
+        }
+    }
+
+    void Jump()
     {
         if (onGround)
         {
             isJump = true;
         }
+    }
+
+    void Stop()
+    {
+        // 速度0にして止める
+        rbody.velocity = new Vector2(0, 0);
+    }
+
+    void Goal()
+    {
+        GameController.gameState = "gameclear";
+        animator.SetBool("gameClear", true);
+        Stop();
     }
 }
