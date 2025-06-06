@@ -22,7 +22,7 @@ public class CannonController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // 経過時間の観測
+        // 経過時間を蓄積
         pastTime += Time.deltaTime;
 
         // プレイヤーとの距離チェック
@@ -37,19 +37,23 @@ public class CannonController : MonoBehaviour
                 GameObject obj = Instantiate(objPrefab, gateTransform.position, Quaternion.identity);
                 Rigidbody2D rbody = obj.GetComponent<Rigidbody2D>();
 
-                // キャノンの傾きを取得
+                // 現在のキャノンの傾きを取得
                 float angleZ = transform.localEulerAngles.z;
                 float x = Mathf.Cos(angleZ * Mathf.Deg2Rad);
                 float y = Mathf.Sin(angleZ * Mathf.Deg2Rad);
                 Vector2 v = new Vector2(x, y) * fireSpeed;
 
-                // 砲弾自身のRigidbodymの力で砲弾を飛ばす
+                // Euler角（オイラー角） は、X軸・Y軸・Z軸それぞれの回転を「度数（°）」で表現する方法
+                // 特定の回転状態で軸が重なり、自由に回転できなくなる現象。
+                // これを避けるために、内部的には Quaternion（四元数）で回転を処理しています。
+
+                // 砲弾自身のRigidbodyの力で砲弾を飛ばす
                 rbody.AddForce(v, ForceMode2D.Impulse);
             }
         }
     }
 
-    // 対象が近くにいれば真を返す
+    // 対象ポジションが自分と近ければ真を返す
     bool IsTargetClose(Vector2 targetPos)
     {
         float distance = Vector2.Distance(transform.position, targetPos);
